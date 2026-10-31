@@ -5,8 +5,9 @@ ANFAL — "اسأل اللي جرّبوا · Ask the ones who wore it"  (showree
 Built only from Anfal's own material: customer photos and campaign shots from
 anfalco.com, the logo, and the packaging photo. Nothing is invented: no quotes,
 no numbers, no generated faces. Lines on screen come from Anfal's own site copy.
-Audio is a countryside sound bed (distant gallops, horse snorts, far-off birds,
-wind in the trees) plus paper/ribbon foley, all synthesised. No music, no instruments.
+Audio is led by horses in the distance (gallops through the whole clip, neighs,
+snorts), with far-off birds and a little wind underneath and light paper/ribbon
+foley, all synthesised. No music, no instruments.
 
   python3 render_v2.py                 # -> anfal_showreel_v2.mp4 (+ _silent)
   python3 render_v2.py --preview 1,5,9 # stills in out/preview_v2/
@@ -384,8 +385,8 @@ def build_audio(path):
     # wind in the trees: low body + leaf rustle riding the gusts
     for ch in range(2):
         g = 0.35 + 0.65 * gusts(0.8, 40 + ch)
-        out[ch] += filt(filt(nz(), "low", 450), "high", 40) * g * 0.55
-        out[ch] += filt(filt(nz(), "high", 1800), "low", 6000) * g ** 2.5 * 0.035
+        out[ch] += filt(filt(nz(), "low", 450), "high", 40) * g * 0.16
+        out[ch] += filt(filt(nz(), "high", 1800), "low", 6000) * g ** 2.5 * 0.012
     bedlvl = envpts([(0, 0), (0.25, 1), (TOTAL - 1.4, 1), (TOTAL, 0), (TOTAL + 1, 0)])
     out *= bedlvl
 
@@ -425,8 +426,8 @@ def build_audio(path):
     tb = 0.3
     while tb < TOTAL - 1.0:
         kind = int(rng.choice(4, p=[0.35, 0.25, 0.25, 0.15]))
-        place(birds, bird_call(kind), tb, rng.uniform(0.07, 0.20), rng.uniform(0.1, 0.9))
-        tb += rng.uniform(0.35, 1.1)
+        place(birds, bird_call(kind), tb, rng.uniform(0.025, 0.065), rng.uniform(0.1, 0.9))
+        tb += rng.uniform(0.9, 2.2)
     birds = filt(birds, "low", 7500)
     out += space(birds, 0.30, 5000, 0.45, 70)
 
@@ -458,13 +459,18 @@ def build_audio(path):
         return lambda x: math.exp(-((x - c) / w) ** 2)
 
     horses = np.zeros((2, n))
-    # far gallop passing behind the opening
-    horses += gallop(0.0, S["Packing"] + 0.6, 0.47, lambda x: 0.30 * bump(1.6, 1.7)(x),
-                     lambda x: 0.25 + 0.5 * min(max(x / 4.0, 0), 1), 1500, 81)
-    # a gallop that closes in as the customer wall speeds up, then passes
-    w0, w1 = S["Wall"] + 0.8, S["Gift"] + 1.2
-    horses += gallop(w0, w1, 0.42, lambda x: 0.62 * bump(S["Gift"] - 0.4, 2.6)(x),
+    # two horses galloping in the distance for the whole clip, drifting nearer and further
+    sw1 = gusts(0.25, 101)
+    sw2 = gusts(0.22, 102)
+    horses += gallop(-0.3, TOTAL, 0.46, lambda x: 0.42 * (0.55 + 0.45 * sw1[min(int(max(x, 0) * sr), n - 1)]),
+                     lambda x: 0.30 + 0.40 * x / TOTAL, 2100, 81)
+    horses += gallop(0.4, TOTAL, 0.52, lambda x: 0.30 * (0.5 + 0.5 * sw2[min(int(max(x, 0) * sr), n - 1)]),
+                     lambda x: 0.72 - 0.40 * x / TOTAL, 1700, 85)
+    # one rider closes in as the customer wall speeds up, then passes
+    w0, w1 = S["Wall"] + 0.8, S["Gift"] + 1.4
+    horses += gallop(w0, w1, 0.42, lambda x: 0.55 * bump(S["Gift"] - 0.3, 2.6)(x),
                      lambda x: 0.8 - 0.6 * min(max((x - w0) / (w1 - w0), 0), 1), 2600, 82)
+
     # the white horse: a snort, then walking steps close by
     def snort(t0, amp, pan, seed):
         r = np.random.default_rng(seed)
@@ -475,17 +481,45 @@ def build_audio(path):
         sig = filt(filt(r.standard_normal(m), "high", 180), "low", 1900) * flutter * env
         place(horses, sig, t0, amp, pan)
 
-    snort(S["Ride"] + 0.05, 1.2, 0.6, 91)
-    snort(S["Ride"] + 0.55, 0.6, 0.62, 92)
-    horses += gallop(S["Ride"] - 0.2, S["EndCard"] + 0.4, 0.95, lambda x: 0.55,
+    snort(S["Ride"] + 0.05, 1.0, 0.6, 91)
+    snort(S["Ride"] + 0.55, 0.5, 0.62, 92)
+    horses += gallop(S["Ride"] - 0.2, S["EndCard"] + 0.4, 0.95, lambda x: 0.45,
                      lambda x: 0.55, 3200, 83, beats=(0.0, 0.24, 0.48, 0.72))
-    # and riding away under the end card
-    e0 = S["EndCard"] + 0.6
-    horses += gallop(e0, TOTAL - 0.5, 0.48, lambda x: 0.32 * max(0.0, 1 - (x - e0) / (TOTAL - 0.5 - e0)) ** 1.5,
-                     lambda x: 0.55 - 0.35 * min(max((x - e0) / 3.0, 0), 1), 1300, 84)
-    out += space(horses, 0.45, 3500, 0.35, 60)
+
+    # neighs, far off: a rising squeal, a shaking descent, a low nicker to finish
+    def neigh(t0, amp, pan, scale, seed):
+        r = np.random.default_rng(seed)
+        d1, d2, d3 = 0.17, 0.85, 0.32
+        m = int((d1 + d2 + d3) * sr)
+        x = np.arange(m) / sr
+        f0 = np.interp(x, [0, d1, d1 + d2, d1 + d2 + 0.02, d1 + d2 + d3],
+                       [640, 1150, 560, 430, 300]) * scale
+        shake = np.where(x > d1, 1.0, 0.25) * np.where(x > d1 + d2, 0.6, 1.0)
+        rate = np.where(x < d1 + d2, r.uniform(13, 16), r.uniform(9, 11))
+        f0 = f0 + 70 * scale * shake * np.sin(TAU * np.cumsum(rate) / sr)
+        jit = cv2.resize(r.standard_normal((1, 40)).astype(np.float32), (m, 1), interpolation=cv2.INTER_CUBIC)[0]
+        f0 = f0 * (1 + 0.012 * jit)
+        ph = TAU * np.cumsum(f0) / sr
+        src = np.zeros(m)
+        for k in range(1, 14):
+            src += np.sin(k * ph) / k ** 0.85 * (k * f0 < 9000)
+        am = 1 - 0.55 * shake * (0.5 + 0.5 * np.sin(TAU * np.cumsum(rate) / sr))
+        env = np.interp(x, [0, 0.03, d1, d1 + d2 * 0.6, d1 + d2, d1 + d2 + 0.03, m / sr],
+                        [0, 0.8, 1.0, 0.75, 0.35, 0.45, 0.0])
+        breath = filt(filt(r.standard_normal(m), "high", 900), "low", 4500) * 0.12
+        sig = filt(filt(src * am * env + breath * env, "high", 450), "low", 3600)
+        sig /= np.abs(sig).max() + 1e-9
+        place(horses, sig, t0, amp, pan)
+
+    neigh(0.9, 0.16, 0.25, 1.0, 201)
+    neigh(S["Wall"] + 2.6, 0.14, 0.78, 0.94, 202)
+    neigh(S["Lebanon"] + 0.9, 0.20, 0.62, 1.05, 203)
+    neigh(S["EndCard"] + 1.6, 0.12, 0.35, 0.97, 204)
+    horses = filt(horses, "low", 3000)
+    out += space(horses, 0.50, 3000, 0.45, 60)
 
     # foley: kept light so the outdoors leads
+    pre_foley = out.copy()
     for ch in range(2):
         times = np.sort(rng.uniform(S["OneOrder"] + 0.02, S["OneOrder"] + 1.0, 45))
         out[ch] += filt(filt(nz(), "high", 1500), "low", 9000) * decays(times, rng.random(45) ** 2 * 0.6, 0.006)
@@ -502,6 +536,7 @@ def build_audio(path):
         out += swell(S["Lebanon"] + 0.7 * k - 0.06, 0.25, 0.25, 700, 6000)
     out += swell(S["EndCard"] - 0.05, 1.5, 0.25, 250, 2500)
 
+    out = pre_foley + (out - pre_foley) * 0.5  # foley sits under the horses
     fade = np.clip((TOTAL + 0.05 - tt) / 1.2, 0, 1)
     out *= fade
     out = filt(out, "high", 30)

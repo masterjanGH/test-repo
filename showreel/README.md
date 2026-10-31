@@ -30,13 +30,13 @@ Fonts (SIL Open Font License, from Google Fonts): Cormorant Garamond, Cinzel, Am
 
 # v2 — "اسأل اللي جرّبوا · Ask the ones who wore it" (customer-led)
 
-`anfal_showreel_v2.mp4` (27 s, sound, −18.7 LUFS) and `anfal_showreel_v2_silent.mp4`. Rendered by `render_v2.py`.
+`anfal_showreel_v2.mp4` (27 s, sound, −17.7 LUFS) and `anfal_showreel_v2_silent.mp4`. Rendered by `render_v2.py`.
 
 Built only from Anfal's own material in `assets/`: customer and campaign photos from anfalco.com, the logo, the
 packaging photo, the packing shot and the riding shot. No invented quotes or numbers.
 
-Sound: a countryside bed (distant gallops that close in and pass, horse snorts and steps, far-off birds, wind in the
-trees) under light paper/ribbon foley. All synthesised; no music, no instruments.
+Sound: horses lead — distant gallops through the whole clip (one rider closes in and passes), far-off neighs, snorts and
+steps — with far-off birds and a little wind underneath and light paper/ribbon foley. All synthesised; no music.
 
 | Time | Scene | Line |
 |---|---|---|
