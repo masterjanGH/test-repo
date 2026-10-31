@@ -5,8 +5,8 @@ ANFAL — "اسأل اللي جرّبوا · Ask the ones who wore it"  (showree
 Built only from Anfal's own material: customer photos and campaign shots from
 anfalco.com, the logo, and the packaging photo. Nothing is invented: no quotes,
 no numbers, no generated faces. Lines on screen come from Anfal's own site copy.
-Audio is sound design only (paper, ribbon, card flicks, sea air) from filtered
-noise: no music, no instruments, no pitched tones.
+Audio is a countryside sound bed (distant gallops, horse snorts, far-off birds,
+wind in the trees) plus paper/ribbon foley, all synthesised. No music, no instruments.
 
   python3 render_v2.py                 # -> anfal_showreel_v2.mp4 (+ _silent)
   python3 render_v2.py --preview 1,5,9 # stills in out/preview_v2/
@@ -73,7 +73,7 @@ def card_frame(name, lt, dur, flip=False, box=(860, 1240), cy=0.49, zoom=(1.0, 1
     out = blurred_bg(name, flip).copy()
     z = zoom[0] + (zoom[1] - zoom[0]) * ease_io(lt / dur)
     c = cover(img, z, 0.5, 0.45, cw, ch)
-    dy = int((1 - ease_out(lt / 0.28)) * 34) if settle else 0
+    dy = int((1 - ease_out(lt / 0.20)) * 30) if settle else 0
     x0, y0 = (W - cw) // 2, int(H * cy - ch / 2) + dy
     # soft shadow
     sh = np.zeros((H, W), np.float32)
@@ -111,7 +111,7 @@ def light_spot(cx, cy, r):
 # ----------------------------------------------------------------------------
 class Hook:
     """Dark. Light finds the horse embroidered on the collar. اسأل اللي جرّبوا."""
-    T = 3.4
+    T = 2.6
 
     def __init__(self):
         rng = np.random.default_rng(3)
@@ -123,7 +123,7 @@ class Hook:
     def render(self, t):
         T = self.T
         img = cover(photo("prod_DSC09036-2400.jpg"), 1.95 - 0.30 * ease_io(t / T), 0.69, 0.43)
-        k = ease_out(t / 1.5)
+        k = ease_out(t / 1.0)
         lx = -0.25 * W + (0.52 * W + 0.25 * W) * k
         ly = 0.40 * H + 0.06 * H * k
         sp = light_spot(lx, ly, 360 + 40 * math.sin(t * 1.3))
@@ -136,46 +136,55 @@ class Hook:
         d = R.splat(x[self.z < 0.8], y[self.z < 0.8], v[self.z < 0.8], 0.9) + \
             R.splat(x[self.z >= 0.8], y[self.z >= 0.8], v[self.z >= 0.8] * 0.2, 8)
         out += rgb(d, (1.0, 0.86, 0.6))
-        txt(out, t, "اسأل اللي جرّبوا", F_AR, 112, 0.45, T, H * 0.715, gold=True, rtl=True,
-            shimmer=(t - 1.7) / 1.0 if 1.7 < t < 2.7 else None, fout=0.01, shadow=0.75)
-        txt(out, t, "Ask the ones who wore it.", F_SERIF_IT, 60, 0.95, T, H * 0.715 + 120, fout=0.01, shadow=0.75)
+        txt(out, t, "اسأل اللي جرّبوا", F_AR, 112, 0.2, T, H * 0.715, gold=True, rtl=True,
+            shimmer=(t - 1.2) / 0.9 if 1.2 < t < 2.1 else None, fout=0.01, shadow=0.75, fin=0.45)
+        txt(out, t, "Ask the ones who wore it.", F_SERIF_IT, 60, 0.55, T, H * 0.715 + 120, fout=0.01,
+            shadow=0.75, fin=0.45)
         return out
 
 
 class OneOrder:
     """The green bag. It starts with one order."""
-    T = 2.6
+    T = 1.8
 
     def render(self, t):
-        out = cover(photo("packaging.png"), 1.32 + 0.16 * ease_io(t / self.T), 0.51, 0.40)
-        out = out * 0.95
-        txt(out, t, "It starts with one order.", F_SERIF_IT, 76, 0.15, self.T, H * 0.70, fout=0.01, shadow=0.7)
-        txt(out, t, "كلّو بيبلّش بطلبيّة وحدة.", F_AR, 56, 0.45, self.T, H * 0.70 + 92, rtl=True, op=0.9,
-            fout=0.01, shadow=0.7)
+        out = cover(photo("packaging.png"), 1.32 + 0.14 * ease_io(t / self.T), 0.51, 0.40) * 0.95
+        txt(out, t, "It starts with one order.", F_SERIF_IT, 76, 0.05, self.T, H * 0.70, fout=0.01, shadow=0.7, fin=0.4)
+        txt(out, t, "كلّو بيبلّش بطلبيّة وحدة.", F_AR, 56, 0.25, self.T, H * 0.70 + 92, rtl=True, op=0.9,
+            fout=0.01, shadow=0.7, fin=0.4)
+        return out
+
+
+class Packing:
+    """Orders lined up, tagged, ready to go out (mirror shot flipped so the bags read right)."""
+    T = 1.8
+
+    def render(self, t):
+        out, _ = card_frame("packing_orders.jpg", t, self.T, flip=True, box=(860, 1150), cy=0.425, zoom=(1.0, 1.07))
+        txt(out, t, "Then another. And another.", F_SERIF_IT, 70, 0.05, self.T, H * 0.79, fout=0.01, fin=0.4)
+        txt(out, t, "وبعدها تانية… وتالتة.", F_AR, 52, 0.3, self.T, H * 0.79 + 86, rtl=True, op=0.9, fout=0.01, fin=0.4)
         return out
 
 
 class Arrives:
-    """Customers holding the bag (mirror shots flipped so ANFAL reads right)."""
-    T = 2.4
-    SHOTS = ["site_Screenshot_2026-05-02_at_5.39.20_PM.jpg", "site_Screenshot_2026-05-02_at_5.43.31_PM.jpg"]
+    """Two customers with their bags (mirror shot flipped so ANFAL reads right)."""
+    T = 1.4
 
     def render(self, t):
-        k = 0 if t < 1.2 else 1
-        lt = t - 1.2 * k
-        out, _ = card_frame(self.SHOTS[k], lt, 1.2, flip=True, box=(860, 1080), cy=0.43, zoom=(1.0, 1.05))
-        txt(out, t, "It arrives like it should.", F_SERIF_IT, 70, 0.1, self.T, H * 0.765, fout=0.01)
-        txt(out, t, "وبتوصل متل ما لازم.", F_AR, 52, 0.4, self.T, H * 0.765 + 86, rtl=True, op=0.9, fout=0.01)
+        out, _ = card_frame("site_Screenshot_2026-05-02_at_5.43.31_PM.jpg", t, self.T, flip=True,
+                            box=(860, 1080), cy=0.43, zoom=(1.0, 1.05))
+        txt(out, t, "It arrives like it should.", F_SERIF_IT, 70, 0.05, self.T, H * 0.765, fout=0.01, fin=0.4)
+        txt(out, t, "وبتوصل متل ما لازم.", F_AR, 52, 0.25, self.T, H * 0.765 + 86, rtl=True, op=0.9, fout=0.01, fin=0.4)
         return out
 
 
 class Wall:
-    """Nine real customers. A counter that keeps going."""
-    SHOTS = [("cust_mvqrbmyq-jDRo9leK-sm.jpg", 1.7), ("site_59584A49-4693-4DE5-8F0C-06334011554F.jpg", 1.7),
-             ("site_E892EDC1-9170-4E2F-9360-261759DB7D39.jpg", 1.6), ("cust_mvqrbv65-OO89Dgji-sm.jpg", 1.3),
-             ("site_03452287-d132-489d-8bfc-b25b9e72fbbe.jpg", 1.3), ("site_855966bd-7a68-42dc-8b42-0b3d278de352.jpg", 1.2),
-             ("site_feedback1.jpg", 1.1), ("site_fabd8da2-4377-46aa-9ded-714bfaeef9ea_2.jpg", 0.9),
-             ("site_ca102277-7024-4b91-9505-bc5abd2f004e.jpg", 1.7)]
+    """Nine real customers. A counter that keeps going, faster."""
+    SHOTS = [("cust_mvqrbmyq-jDRo9leK-sm.jpg", 1.2), ("site_59584A49-4693-4DE5-8F0C-06334011554F.jpg", 1.1),
+             ("site_E892EDC1-9170-4E2F-9360-261759DB7D39.jpg", 1.0), ("cust_mvqrbv65-OO89Dgji-sm.jpg", 0.85),
+             ("site_03452287-d132-489d-8bfc-b25b9e72fbbe.jpg", 0.8), ("site_855966bd-7a68-42dc-8b42-0b3d278de352.jpg", 0.7),
+             ("site_feedback1.jpg", 0.6), ("site_fabd8da2-4377-46aa-9ded-714bfaeef9ea_2.jpg", 0.55),
+             ("site_ca102277-7024-4b91-9505-bc5abd2f004e.jpg", 1.3)]
     T = sum(d for _, d in SHOTS)
 
     @classmethod
@@ -187,26 +196,26 @@ class Wall:
         k = max(i for i, s in enumerate(starts) if t >= s - 1e-9)
         name, dur = self.SHOTS[k]
         lt = t - starts[k]
-        out, (x0, y0, cw, ch) = card_frame(name, lt, dur, box=(860, 1230), cy=0.505)
+        out, _ = card_frame(name, lt, dur, box=(860, 1230), cy=0.505)
         hd = text_alpha("WORN BY THE ONES WHO EARNED IT", F_CAPS, 30, 9, 500)
-        comp_text(out, hd, W / 2, H * 0.072, op=ease_out(t / 0.5), shadow=0.4)
+        comp_text(out, hd, W / 2, H * 0.072, op=ease_out(t / 0.35), shadow=0.4)
         n = text_alpha("Nº %02d" % (k + 1), F_CAPS, 30, 6, 500)
-        comp_text(out, n, W / 2, H * 0.112, op=ease_out(lt / 0.15), gold=True, shadow=0.3)
+        comp_text(out, n, W / 2, H * 0.112, op=ease_out(lt / 0.12), gold=True, shadow=0.3)
         return out
 
 
 class Gift:
     """The card inside. For your brother. Your father. Your friend."""
-    T = 4.2
+    T = 3.0
 
     def render(self, t):
         T = self.T
         k = ease_io(t / T)
-        out = cover(photo("packaging.png"), 1.72 + 0.18 * k, 0.60 - 0.02 * k, 0.80 + 0.01 * k) * 0.95
-        for i, (line, t0) in enumerate([("For your brother.", 0.25), ("Your father.", 1.05), ("Your friend.", 1.85)]):
-            txt(out, t, line, F_SERIF_IT, 84, t0, T, H * (0.12 + 0.058 * i), fout=0.01, shadow=0.8)
-        txt(out, t, "لخيّك. لبيّك. لرفيقك.", F_AR, 58, 2.55, T, H * 0.12 + 0.058 * 3 * H + 6, rtl=True,
-            op=0.9, fout=0.01, shadow=0.8)
+        out = cover(photo("packaging.png"), 1.86 + 0.10 * k, 0.60 - 0.02 * k, 0.82 + 0.005 * k) * 0.95
+        for i, (line, t0) in enumerate([("For your brother.", 0.1), ("Your father.", 0.6), ("Your friend.", 1.1)]):
+            txt(out, t, line, F_SERIF_IT, 84, t0, T, H * (0.12 + 0.058 * i), fout=0.01, shadow=0.8, fin=0.4)
+        txt(out, t, "لخيّك. لبيّك. لرفيقك.", F_AR, 58, 1.6, T, H * 0.12 + 0.058 * 3 * H + 6, rtl=True,
+            op=0.9, fout=0.01, shadow=0.8, fin=0.4)
         return out
 
 
@@ -214,21 +223,28 @@ class Lebanon:
     """Campaign cuts. Made 100% in Lebanon."""
     SHOTS = [("prod_3FE3C476-4783-42BA-BAC7-D0F711B94FCA.jpg", 0.5, 0.42),
              ("prod_DSC08842_1.jpg", 0.55, 0.40),
-             ("prod_DSC09240.jpg", 0.45, 0.42),
-             ("prod_poloBrown1.jpg", 0.45, 0.40)]
-    T = 3.8
+             ("prod_DSC09240.jpg", 0.45, 0.42)]
+    T = 2.1
 
     def render(self, t):
-        k = min(int(t / 0.95), 3)
-        lt = t - 0.95 * k
+        k = min(int(t / 0.7), 2)
+        lt = t - 0.7 * k
         name, cx, cy = self.SHOTS[k]
-        out = cover(photo(name), 1.04 + 0.05 * lt, cx, cy)
+        out = cover(photo(name), 1.04 + 0.06 * lt, cx, cy)
         sh = sstep(0.62, 0.95, YY / H)[..., None]
         out = out * (1 - 0.45 * sh)
-        txt(out, t, "Made 100% in Lebanon.", F_SERIF_IT, 76, 0.1, self.T, H * 0.765, fout=0.01, shadow=0.85)
-        txt(out, t, "معمولة ١٠٠٪ بلبنان.", F_AR, 56, 0.4, self.T, H * 0.765 + 90, rtl=True, op=0.92, fout=0.01,
-            shadow=0.85)
+        txt(out, t, "Made 100% in Lebanon.", F_SERIF_IT, 76, 0.03, self.T, H * 0.765, fout=0.01, shadow=0.85, fin=0.35)
+        txt(out, t, "معمولة ١٠٠٪ بلبنان.", F_AR, 56, 0.2, self.T, H * 0.765 + 90, rtl=True, op=0.92, fout=0.01,
+            shadow=0.85, fin=0.35)
         return out
+
+
+class Ride:
+    """The white horse. No words. Cuts straight to the horse in the logo."""
+    T = 1.6
+
+    def render(self, t):
+        return cover(photo("riding.jpg"), 1.04 + 0.08 * ease_io(t / self.T), 0.56, 0.44)
 
 
 @functools.lru_cache(maxsize=4)
@@ -242,8 +258,8 @@ def logo_alpha(width):
 
 
 class EndCard:
-    """Anfal green. The gold mark draws in. Your turn. WhatsApp."""
-    T = 6.5
+    """Anfal green. The gold mark draws in. Your turn. anfalco.com."""
+    T = 5.0
 
     def __init__(self):
         self.suede = fbm(H, W, 9, 91, 3)
@@ -259,24 +275,22 @@ class EndCard:
         yy = np.linspace(0, 1, h, dtype=np.float32)[:, None]
         xx = np.linspace(0, 1, w, dtype=np.float32)[None, :]
         p = yy * 0.75 + xx * 0.25
-        r = -0.1 + 1.25 * ease_io(t / 1.6)
-        m = sstep(r + 0.06, r - 0.06, p)
-        al = a * m
-        blur = (1 - ease_out(t / 1.8)) * 5
+        r = -0.1 + 1.25 * ease_io(t / 1.2)
+        al = a * sstep(r + 0.06, r - 0.06, p)
+        blur = (1 - ease_out(t / 1.3)) * 5
         cy = H * 0.31
-        sh = (t - 2.0) / 1.2 if 2.0 < t < 3.2 else None
+        sh = (t - 1.4) / 1.1 if 1.4 < t < 2.5 else None
         comp_text(out, np.pad(al, 40), W / 2, cy, op=1.0, gold=True, blur=blur, shimmer=sh, shadow=0.35)
-        txt(out, t, "The Uncommon is Earned.", F_SERIF_IT, 70, 1.3, self.T + 1, cy + h / 2 + 95, gold=True, shadow=0.3)
-        txt(out, t, "Your turn.", F_SERIF_IT, 96, 2.4, self.T + 1, H * 0.585, shadow=0.3)
-        txt(out, t, "دورك.", F_AR, 64, 2.7, self.T + 1, H * 0.585 + 95, rtl=True, op=0.9, shadow=0.3)
-        txt(out, t, "ORDER ON WHATSAPP", F_CAPS, 28, 3.3, self.T + 1, H * 0.70, gold=True, track=10, shadow=0.2, rise=8)
-        txt(out, t, "+961 76 790 486", F_CAPS, 44, 3.45, self.T + 1, H * 0.735, track=5, shadow=0.2, rise=8)
-        txt(out, t, "ANFALCO.COM   ·   @ANFAL.CO", F_CAPS, 24, 3.7, self.T + 1, H * 0.775, track=7, op=0.8,
-            shadow=0.2, rise=8)
+        txt(out, t, "The Uncommon is Earned.", F_SERIF_IT, 70, 0.9, self.T + 1, cy + h / 2 + 95, gold=True, shadow=0.3)
+        txt(out, t, "Your turn.", F_SERIF_IT, 96, 1.6, self.T + 1, H * 0.585, shadow=0.3, fin=0.5)
+        txt(out, t, "دورك.", F_AR, 64, 1.85, self.T + 1, H * 0.585 + 95, rtl=True, op=0.9, shadow=0.3, fin=0.5)
+        txt(out, t, "ORDER AT", F_CAPS, 28, 2.3, self.T + 1, H * 0.705, gold=True, track=12, shadow=0.2, rise=8, fin=0.5)
+        txt(out, t, "ANFALCO.COM", F_CAPS, 60, 2.45, self.T + 1, H * 0.745, track=10, shadow=0.2, rise=8, fin=0.5)
+        txt(out, t, "@ANFAL.CO", F_CAPS, 24, 2.75, self.T + 1, H * 0.787, track=8, op=0.75, shadow=0.2, rise=8, fin=0.5)
         return out
 
 
-SCENES = [Hook, OneOrder, Arrives, Wall, Gift, Lebanon, EndCard]
+SCENES = [Hook, OneOrder, Packing, Arrives, Wall, Gift, Lebanon, Ride, EndCard]
 STARTS = np.cumsum([0] + [S.T for S in SCENES]).tolist()
 TOTAL = STARTS[-1]
 NFRAMES = int(round(TOTAL * FPS))
@@ -289,39 +303,46 @@ def render_frame(fi):
     S = SCENES[i]
     t = tg - STARTS[i]
     if S not in _inst:
-        _inst[S] = S() if "__init__" in S.__dict__ else S()
+        _inst[S] = S()
     img = _inst[S].render(t).astype(np.float32)
     a = 1.0
     if i == 0:
-        a = ease_io(t / 0.2)
+        a = ease_io(t / 0.15)
     if S is EndCard:
-        a = ease_io(t / 0.3) * (1 - ease_io((t - (S.T - 0.5)) / 0.5) * 0.0)
-    if i == len(SCENES) - 2:  # dip into the end card
-        a *= 1 - ease_io((t - (S.T - 0.2)) / 0.2)
+        a = ease_io(t / 0.2)
+    if S is Ride:  # quick blink into the logo: horse to horse
+        a *= 1 - ease_io((t - (S.T - 0.15)) / 0.15)
     img *= a
     return R.post(img, fi).tobytes()
 
 
 # ----------------------------------------------------------------------------
-# sound design: paper, ribbon, card flicks, sea air. Filtered noise only.
+# sound: a countryside bed (wind in the trees, far-off birds, distant gallops,
+# horse snorts and steps) under light paper/ribbon foley. All synthesised.
+# Birds are the only pitched element (natural calls, not music).
 # ----------------------------------------------------------------------------
 def build_audio(path):
-    from scipy.signal import butter, sosfilt, lfilter
+    from scipy.signal import butter, sosfilt, lfilter, fftconvolve
     sr = 48000
     n = int(TOTAL * sr) + sr // 2
     tt = np.arange(n) / sr
-    rng = np.random.default_rng(17)
+    rng = np.random.default_rng(23)
     S = dict(zip([c.__name__ for c in SCENES], STARTS))
 
     def nz(m=n):
         return rng.standard_normal(m)
 
-    def filt(x, kind, f):
-        return sosfilt(butter(2, f, kind, fs=sr, output="sos"), x)
+    def filt(x, kind, f, order=2):
+        return sosfilt(butter(order, f, kind, fs=sr, output="sos"), x, axis=-1)
 
     def envpts(pts):
         ts, vs = zip(*pts)
         return np.interp(tt, ts, vs)
+
+    def gusts(rate, seed):
+        r = np.random.default_rng(seed)
+        m = int(TOTAL * rate) + 4
+        return np.interp(tt, np.arange(m) / rate, r.random(m))
 
     def decays(times, amps, tau):
         imp = np.zeros(n)
@@ -337,46 +358,151 @@ def build_audio(path):
         e[tt < t0] = 0
         return filt(filt(nz(), "high", lo), "low", hi) * e * amp
 
+    def outdoor_ir(tail, lp, seed):
+        r = np.random.default_rng(seed)
+        ti = np.arange(int(tail * 4 * sr)) / sr
+        ir = filt(r.standard_normal(len(ti)), "low", lp) * np.exp(-ti / tail)
+        ir[0] += 0.0
+        return ir / np.sqrt((ir ** 2).sum())
+
+    def space(x, tail, lp, wet, seed):
+        out = np.zeros((2, n))
+        for ch in range(2):
+            out[ch] = x[ch] * (1 - wet) + fftconvolve(x[ch], outdoor_ir(tail, lp, seed + ch))[:n] * wet
+        return out
+
+    def place(bus, sig, t0, amp, pan):
+        i = int(t0 * sr)
+        if i < 0 or i >= n:
+            return
+        sig = sig[: n - i]
+        bus[0, i:i + len(sig)] += sig * amp * math.sqrt(1 - pan)
+        bus[1, i:i + len(sig)] += sig * amp * math.sqrt(pan)
+
     out = np.zeros((2, n))
-    # quiet air under everything
-    air = envpts([(0, 0.05), (S["Lebanon"], 0.05), (S["Lebanon"] + 0.2, 0.0), (S["EndCard"], 0.04),
-                  (TOTAL - 1, 0.02), (TOTAL + 1, 0)])
+
+    # wind in the trees: low body + leaf rustle riding the gusts
     for ch in range(2):
-        out[ch] += filt(filt(nz(), "low", 500), "low", 900) * 1.4 * air
-    # hook: a slow brush of air as the light arrives
-    out += swell(0.0, 1.8, 0.35, 300, 3000)
-    # paper bag: crinkle bursts
+        g = 0.35 + 0.65 * gusts(0.8, 40 + ch)
+        out[ch] += filt(filt(nz(), "low", 450), "high", 40) * g * 0.55
+        out[ch] += filt(filt(nz(), "high", 1800), "low", 6000) * g ** 2.5 * 0.035
+    bedlvl = envpts([(0, 0), (0.25, 1), (TOTAL - 1.4, 1), (TOTAL, 0), (TOTAL + 1, 0)])
+    out *= bedlvl
+
+    # birds, far off: tsips, trills, two-note whistles, chatter
+    birds = np.zeros((2, n))
+
+    def tone(f0, f1, dur, p=1.0, vib=0.0, vibf=0.0):
+        m = int(dur * sr)
+        x = np.arange(m) / sr
+        f = f0 + (f1 - f0) * (x / dur) ** p + vib * np.sin(TAU * vibf * x)
+        ph = TAU * np.cumsum(f) / sr
+        env = np.sin(math.pi * x / dur) ** 2
+        return (np.sin(ph) + 0.12 * np.sin(2 * ph)) * env
+
+    def bird_call(kind):
+        if kind == 0:  # tsip
+            return tone(rng.uniform(5500, 7000), rng.uniform(3500, 4200), rng.uniform(0.035, 0.06), 0.6)
+        if kind == 1:  # trill
+            k = rng.integers(7, 14)
+            f = rng.uniform(3800, 5200)
+            seg = []
+            for _ in range(k):
+                seg.append(tone(f, f * rng.uniform(1.1, 1.3), 0.024))
+                seg.append(np.zeros(int(rng.uniform(0.035, 0.05) * sr)))
+            return np.concatenate(seg)
+        if kind == 2:  # two-note whistle
+            f = rng.uniform(2600, 3400)
+            return np.concatenate([tone(f, f * 1.06, 0.15, 1, 40, 22), np.zeros(int(0.06 * sr)),
+                                   tone(f * 0.86, f * 0.78, 0.22, 1, 40, 22)])
+        seg = []  # chatter
+        for _ in range(rng.integers(3, 6)):
+            f = rng.uniform(3000, 7000)
+            seg.append(tone(f, f * rng.uniform(0.7, 1.3), rng.uniform(0.03, 0.06)))
+            seg.append(np.zeros(int(rng.uniform(0.03, 0.12) * sr)))
+        return np.concatenate(seg)
+
+    tb = 0.3
+    while tb < TOTAL - 1.0:
+        kind = int(rng.choice(4, p=[0.35, 0.25, 0.25, 0.15]))
+        place(birds, bird_call(kind), tb, rng.uniform(0.07, 0.20), rng.uniform(0.1, 0.9))
+        tb += rng.uniform(0.35, 1.1)
+    birds = filt(birds, "low", 7500)
+    out += space(birds, 0.30, 5000, 0.45, 70)
+
+    # horses
+    def hooves(times, amps, dist_lp):
+        b = np.zeros((2, n))
+        body = filt(nz(), "low", 170) * decays(times, amps, 0.055) * 2.4
+        thud = filt(filt(nz(), "high", 300), "low", 1400) * decays([t + 0.002 for t in times], amps, 0.022) * 0.9
+        dirt = filt(nz(), "high", 2500) * decays([t + 0.004 for t in times], amps, 0.012) * 0.25
+        x = filt(body + thud + dirt, "low", dist_lp)
+        return x
+
+    def gallop(t0, t1, period, amp_fn, pan_fn, lp, seed, beats=(0.0, 0.085, 0.17, 0.28)):
+        r = np.random.default_rng(seed)
+        times, amps, pans = [], [], []
+        t = t0
+        while t < t1:
+            for k, b in enumerate(beats):
+                tt_ = t + b + r.normal(0, 0.006)
+                times.append(tt_)
+                amps.append(amp_fn(tt_) * (0.75 + 0.35 * r.random()) * (1.15 if k == len(beats) - 1 else 1))
+                pans.append(pan_fn(tt_))
+            t += period * (1 + r.normal(0, 0.02))
+        x = hooves(times, amps, lp)
+        p = np.interp(tt, times, pans) if len(times) > 1 else np.full(n, 0.5)
+        return np.stack([x * np.sqrt(1 - p), x * np.sqrt(p)])
+
+    def bump(c, w):
+        return lambda x: math.exp(-((x - c) / w) ** 2)
+
+    horses = np.zeros((2, n))
+    # far gallop passing behind the opening
+    horses += gallop(0.0, S["Packing"] + 0.6, 0.47, lambda x: 0.30 * bump(1.6, 1.7)(x),
+                     lambda x: 0.25 + 0.5 * min(max(x / 4.0, 0), 1), 1500, 81)
+    # a gallop that closes in as the customer wall speeds up, then passes
+    w0, w1 = S["Wall"] + 0.8, S["Gift"] + 1.2
+    horses += gallop(w0, w1, 0.42, lambda x: 0.62 * bump(S["Gift"] - 0.4, 2.6)(x),
+                     lambda x: 0.8 - 0.6 * min(max((x - w0) / (w1 - w0), 0), 1), 2600, 82)
+    # the white horse: a snort, then walking steps close by
+    def snort(t0, amp, pan, seed):
+        r = np.random.default_rng(seed)
+        m = int(0.7 * sr)
+        x = np.arange(m) / sr
+        flutter = 1 + 0.6 * np.sin(TAU * r.uniform(26, 34) * x)
+        env = (1 - np.exp(-x / 0.02)) * np.exp(-x / 0.18)
+        sig = filt(filt(r.standard_normal(m), "high", 180), "low", 1900) * flutter * env
+        place(horses, sig, t0, amp, pan)
+
+    snort(S["Ride"] + 0.05, 1.2, 0.6, 91)
+    snort(S["Ride"] + 0.55, 0.6, 0.62, 92)
+    horses += gallop(S["Ride"] - 0.2, S["EndCard"] + 0.4, 0.95, lambda x: 0.55,
+                     lambda x: 0.55, 3200, 83, beats=(0.0, 0.24, 0.48, 0.72))
+    # and riding away under the end card
+    e0 = S["EndCard"] + 0.6
+    horses += gallop(e0, TOTAL - 0.5, 0.48, lambda x: 0.32 * max(0.0, 1 - (x - e0) / (TOTAL - 0.5 - e0)) ** 1.5,
+                     lambda x: 0.55 - 0.35 * min(max((x - e0) / 3.0, 0), 1), 1300, 84)
+    out += space(horses, 0.45, 3500, 0.35, 60)
+
+    # foley: kept light so the outdoors leads
     for ch in range(2):
-        times = np.sort(rng.uniform(S["OneOrder"] + 0.05, S["OneOrder"] + 1.4, 70))
-        amps = rng.random(70) ** 2 * 0.9
-        out[ch] += filt(filt(nz(), "high", 1500), "low", 9000) * decays(times, amps, 0.006)
-    out += swell(S["OneOrder"] - 0.1, 0.6, 0.35, 600, 6000)
-    # ribbon / handle swish on each bag shot
-    for c in (S["Arrives"], S["Arrives"] + 1.2):
-        out += swell(c - 0.08, 0.35, 0.5, 900, 7000)
-    # card flicks on every customer
+        times = np.sort(rng.uniform(S["OneOrder"] + 0.02, S["OneOrder"] + 1.0, 45))
+        out[ch] += filt(filt(nz(), "high", 1500), "low", 9000) * decays(times, rng.random(45) ** 2 * 0.6, 0.006)
+    out += swell(S["Packing"] - 0.05, 0.5, 0.30, 600, 6000)
+    out += swell(S["Arrives"] - 0.05, 0.35, 0.35, 900, 7000)
     for i, c in enumerate(Wall.cut_times()):
         t0 = S["Wall"] + c
-        flick = filt(filt(nz(), "high", 2200), "low", 9000) * decays([t0], [1.0], 0.012) * 0.9
-        body = filt(filt(nz(), "high", 250), "low", 1100) * decays([t0 + 0.003], [1.0], 0.035) * 0.8
-        pan = 0.5 + (0.08 if i % 2 else -0.08)
-        out[0] += (flick + body) * (1 - pan) * 2
-        out[1] += (flick + body) * pan * 2
-    # gift card slides out of the bag
-    out += swell(S["Gift"] + 0.05, 0.9, 0.45, 500, 5000)
-    out += swell(S["Gift"] + 1.0, 0.7, 0.18, 1200, 6000)
-    # Lebanon: sea and wind off the Corniche, swishes on the cuts
-    sea = envpts([(0, 0), (S["Lebanon"] - 0.05, 0), (S["Lebanon"] + 0.1, 1), (S["EndCard"] - 0.2, 1),
-                  (S["EndCard"] + 0.6, 0), (TOTAL + 1, 0)])
-    wave_env = 0.45 + 0.55 * (0.5 + 0.5 * np.sin(TAU * (tt - S["Lebanon"]) / 2.6 - 1.2)) ** 2
-    for ch in range(2):
-        out[ch] += filt(filt(nz(), "low", 700), "high", 60) * wave_env * sea * 0.9
-        out[ch] += filt(nz(), "high", 2500) * wave_env * sea * 0.12
-    for k in range(1, 4):
-        out += swell(S["Lebanon"] + 0.95 * k - 0.1, 0.3, 0.3, 700, 6000)
-    # end card: one breath of air as the mark draws in
-    out += swell(S["EndCard"] - 0.05, 1.8, 0.30, 250, 2500)
-    fade = np.clip((TOTAL + 0.1 - tt) / 1.0, 0, 1)
+        flick = filt(filt(nz(), "high", 2200), "low", 9000) * decays([t0], [1.0], 0.010) * 0.6
+        pan = 0.5 + (0.1 if i % 2 else -0.1)
+        out[0] += flick * (1 - pan) * 2
+        out[1] += flick * pan * 2
+    out += swell(S["Gift"] + 0.02, 0.7, 0.35, 500, 5000)
+    for k in range(3):
+        out += swell(S["Lebanon"] + 0.7 * k - 0.06, 0.25, 0.25, 700, 6000)
+    out += swell(S["EndCard"] - 0.05, 1.5, 0.25, 250, 2500)
+
+    fade = np.clip((TOTAL + 0.05 - tt) / 1.2, 0, 1)
     out *= fade
     out = filt(out, "high", 30)
     out = out / np.abs(out).max() * 0.7
