@@ -25,3 +25,22 @@ Re-render: `pip install numpy opencv-python-headless pillow scipy` (Pillow with 
 Copy lives in each scene's `LINES` / text calls in `render.py`.
 
 Fonts (SIL Open Font License, from Google Fonts): Cormorant Garamond, Cinzel, Amiri.
+
+---
+
+# v2 — "اسأل اللي جرّبوا · Ask the ones who wore it" (customer-led)
+
+`anfal_showreel_v2.mp4` (35 s, sound design, −18 LUFS) and `anfal_showreel_v2_silent.mp4`. Rendered by `render_v2.py`.
+
+Built only from Anfal's own material in `assets/`: customer and campaign photos from anfalco.com, the logo, and the
+packaging photo. No invented quotes or numbers; every line comes from Anfal's site copy.
+
+| Time | Scene | Line |
+|---|---|---|
+| 0:00 | Light finds the horse embroidered on the Harrington collar | اسأل اللي جرّبوا / Ask the ones who wore it. |
+| 0:03 | The green bag | It starts with one order. / كلّو بيبلّش بطلبيّة وحدة. |
+| 0:06 | Two customers holding the bag (mirror shots flipped so ANFAL reads right) | It arrives like it should. / وبتوصل متل ما لازم. |
+| 0:08 | Nine real customers, gold-framed, counter Nº 01 → 09, accelerating | WORN BY THE ONES WHO EARNED IT |
+| 0:21 | The card inside the bag | For your brother. Your father. Your friend. / لخيّك. لبيّك. لرفيقك. |
+| 0:25 | Campaign cuts: Corniche, white car, coffee, sea | Made 100% in Lebanon. / معمولة ١٠٠٪ بلبنان. |
+| 0:29 | Gold logo draws in on Anfal green | The Uncommon is Earned. · Your turn. / دورك. · Order on WhatsApp +961 76 790 486 |
