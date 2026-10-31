@@ -35,7 +35,7 @@ Fonts (SIL Open Font License, from Google Fonts): Cormorant Garamond, Cinzel, Am
 Built only from Anfal's own material in `assets/`: customer and campaign photos from anfalco.com, the logo, the
 packaging photo, the packing shot and the riding shot. No invented quotes or numbers.
 
-Sound: horses lead — distant gallops through the whole clip (one rider closes in and passes), far-off neighs, snorts and
+Sound: horses lead — distant gallops through the whole clip (one rider closes in and passes), far-off nostril blows ("brrr"), snorts and
 steps — with far-off birds and a little wind underneath and light paper/ribbon foley. All synthesised; no music.
 
 | Time | Scene | Line |

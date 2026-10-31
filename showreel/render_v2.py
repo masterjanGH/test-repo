@@ -5,8 +5,8 @@ ANFAL — "اسأل اللي جرّبوا · Ask the ones who wore it"  (showree
 Built only from Anfal's own material: customer photos and campaign shots from
 anfalco.com, the logo, and the packaging photo. Nothing is invented: no quotes,
 no numbers, no generated faces. Lines on screen come from Anfal's own site copy.
-Audio is led by horses in the distance (gallops through the whole clip, neighs,
-snorts), with far-off birds and a little wind underneath and light paper/ribbon
+Audio is led by horses in the distance (gallops through the whole clip, nostril
+blows, snorts), with far-off birds and a little wind underneath and light paper/ribbon
 foley, all synthesised. No music, no instruments.
 
   python3 render_v2.py                 # -> anfal_showreel_v2.mp4 (+ _silent)
@@ -481,40 +481,34 @@ def build_audio(path):
         sig = filt(filt(r.standard_normal(m), "high", 180), "low", 1900) * flutter * env
         place(horses, sig, t0, amp, pan)
 
-    snort(S["Ride"] + 0.05, 1.0, 0.6, 91)
-    snort(S["Ride"] + 0.55, 0.5, 0.62, 92)
+    snort(S["Ride"] + 0.05, 0.7, 0.6, 91)
     horses += gallop(S["Ride"] - 0.2, S["EndCard"] + 0.4, 0.95, lambda x: 0.45,
                      lambda x: 0.55, 3200, 83, beats=(0.0, 0.24, 0.48, 0.72))
 
-    # neighs, far off: a rising squeal, a shaking descent, a low nicker to finish
-    def neigh(t0, amp, pan, scale, seed):
+    # the horse "blow": air forced through the nostrils, flapping them ("brrrr"), then a breathy "shhh"
+    def blow(t0, amp, pan, seed, length=1.0):
         r = np.random.default_rng(seed)
-        d1, d2, d3 = 0.17, 0.85, 0.32
-        m = int((d1 + d2 + d3) * sr)
+        fl, tail = 0.55 * length, 0.55 * length
+        m = int((fl + tail) * sr)
         x = np.arange(m) / sr
-        f0 = np.interp(x, [0, d1, d1 + d2, d1 + d2 + 0.02, d1 + d2 + d3],
-                       [640, 1150, 560, 430, 300]) * scale
-        shake = np.where(x > d1, 1.0, 0.25) * np.where(x > d1 + d2, 0.6, 1.0)
-        rate = np.where(x < d1 + d2, r.uniform(13, 16), r.uniform(9, 11))
-        f0 = f0 + 70 * scale * shake * np.sin(TAU * np.cumsum(rate) / sr)
-        jit = cv2.resize(r.standard_normal((1, 40)).astype(np.float32), (m, 1), interpolation=cv2.INTER_CUBIC)[0]
-        f0 = f0 * (1 + 0.012 * jit)
-        ph = TAU * np.cumsum(f0) / sr
-        src = np.zeros(m)
-        for k in range(1, 14):
-            src += np.sin(k * ph) / k ** 0.85 * (k * f0 < 9000)
-        am = 1 - 0.55 * shake * (0.5 + 0.5 * np.sin(TAU * np.cumsum(rate) / sr))
-        env = np.interp(x, [0, 0.03, d1, d1 + d2 * 0.6, d1 + d2, d1 + d2 + 0.03, m / sr],
-                        [0, 0.8, 1.0, 0.75, 0.35, 0.45, 0.0])
-        breath = filt(filt(r.standard_normal(m), "high", 900), "low", 4500) * 0.12
-        sig = filt(filt(src * am * env + breath * env, "high", 450), "low", 3600)
+        rate = np.interp(x, [0, fl * 0.3, fl, fl + tail], [r.uniform(30, 36), r.uniform(26, 30), 17, 14])
+        rate = rate * (1 + 0.06 * np.interp(x, np.linspace(0, x[-1], 30), r.standard_normal(30)))
+        ph = TAU * np.cumsum(rate) / sr
+        pulses = (0.5 + 0.5 * np.cos(ph)) ** 5
+        e_fl = np.interp(x, [0, 0.025, fl * 0.75, fl, fl + 0.15, x[-1]], [0, 1, 0.85, 0.35, 0.0, 0.0])
+        e_sh = np.interp(x, [0, fl * 0.5, fl + 0.05, x[-1]], [0, 0.25, 0.55, 0.0]) ** 1.2
+        flutter = filt(filt(r.standard_normal(m), "high", 110), "low", 2300) * (0.15 + 0.85 * pulses) * e_fl
+        body = filt(r.standard_normal(m), "low", 260) * pulses * e_fl * 0.8
+        shh = filt(filt(r.standard_normal(m), "high", 700), "low", 5200) * e_sh * 0.45
+        sig = flutter + body + shh
         sig /= np.abs(sig).max() + 1e-9
         place(horses, sig, t0, amp, pan)
 
-    neigh(0.9, 0.16, 0.25, 1.0, 201)
-    neigh(S["Wall"] + 2.6, 0.14, 0.78, 0.94, 202)
-    neigh(S["Lebanon"] + 0.9, 0.20, 0.62, 1.05, 203)
-    neigh(S["EndCard"] + 1.6, 0.12, 0.35, 0.97, 204)
+    blow(0.9, 0.30, 0.25, 201, 1.1)
+    blow(S["Wall"] + 2.6, 0.26, 0.78, 202, 0.9)
+    blow(S["Lebanon"] + 0.6, 0.32, 0.62, 203, 1.2)
+    blow(S["EndCard"] + 1.6, 0.24, 0.35, 204, 1.0)
+    blow(S["Ride"] + 0.35, 0.75, 0.6, 205, 1.1)  # the white horse, close
     horses = filt(horses, "low", 3000)
     out += space(horses, 0.50, 3000, 0.45, 60)
 
